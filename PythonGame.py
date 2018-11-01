@@ -7,11 +7,17 @@ speed = (0, 0)
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
-background = pygame.image.load("gameBackground.png")
 
 vec = pygame.math.Vector2
 black = (0,0,0)
 
+
+class Background(pygame.sprite.Sprite):
+    def __init__(self,image,location):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load("gameBackground.png")
+        self.rect = self.image.get_rect()
+        self.rect.left, self.rect.top = location
 
 class Platform(pygame.sprite.Sprite):
     def __init__(self, width, height):
@@ -34,23 +40,21 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         # Gravity
         self.calcGravity()
-
         self.rect.x += self.movex
-
-        player_hit_list = pygame.sprite.spritecollide(self,self.level.platform_list,False)
-        for player in player_hit_list:
-            if self.movex >0:
-                self.rect.right = player.rect.left
-            elif self.movex < 0:
-                self.rect.left = player.rect.left
+        # print("rect.x = %d " % self.rect.x)
+        # print("move x = %d " % self.movex)
+        # player_hit_list = pygame.sprite.spritecollide(self,self.level.platform_list, False)
+        # for player in player_hit_list:
+        #     if self.movey > 0:
+        #         self.rect.right = player.rect.left
+        #     elif self.movey < 0:
+        #         self.rect.left = player.rect.left
         self.rect.y += self.movey
-        player_hit_list = pygame.sprite.spritecollide(self,self.level.platform_list,False)
-        for player in player_hit_list:
-            if self.movey >0:
-                self.rect.bottom = player.rect.top
-            elif self.movey < 0:
-                self.rect.top = player.rect.bottom
-            self.movey = 0
+        platform_hit_list = pygame.sprite.spritecollide(self,self.level.platform_list, False)
+        for platform in platform_hit_list:
+            if self.movey > 0:
+                self.rect.bottom = platform.rect.top
+                self.movey = 0
 
     def calcGravity(self):
         if self.movey == 0:
@@ -61,9 +65,10 @@ class Player(pygame.sprite.Sprite):
             self.movey = 0
             self.rect.y = HEIGHT - self.rect.height
     def jump(self):
-        self.rect.y += 2
-        platform_hit_list = pygame.sprite.spritecollide(self,self.level.platform_list, False)
-        self.rect.y -=2
+        # self.rect.y += 2
+    #         # self.rect.y -=2
+    #         # player_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
+        self.movey= -10
     def go_Left(self):
         self.movex = -6
     def go_Right(self):
@@ -85,9 +90,9 @@ class Bullet(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect()
 
-        def update(self):
+    def update(self):
 
-            """ Move the bullet. """
+        """ Move the bullet. """
         self.rect.y -= 3
         self.rect.y = 3
 
@@ -96,7 +101,7 @@ class Enemy(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load('enemy_fill.png')
-        self.imgae = pygame.transform.scale(self.image,(100,100))
+        self.image = pygame.transform.scale(self.image,(100,100))
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -120,21 +125,29 @@ class Level(object):
         self.platform_list.update()
         self.enemy_list.update()
     def draw(self,screen):
-        screen.fill((255,255,255))
+
         self.platform_list.draw(screen)
         self.enemy_list.draw(screen)
 
 class LevelOne(Level):
-    def __init__(self):
+    def __init__(self, player):
         Level.__init__(self,player)
-        level = [[210,70,500,500], [210,70,200,400],[210,70,600,300]]
+        level = [[195,36,422,171], [195,36,61,358], [195,36,762,358], [1014,29,0,471]]
 
         for platform in level:
             block = Platform(platform[0], platform[1])
             block.rect.x = platform[2]
-            block.rext.y = platform[3]
+            block.rect.y = platform[3]
             block.player = self.player
             self.platform_list.add(block)
+
+class Bullets(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+
+
+
+Bg = Background("gameBackground.png", [0,0])
 
 pygame.init()
 
@@ -156,11 +169,15 @@ while 1:
         if event.type == pygame.QUIT:
             sys.exit()
         if event.type == pygame.KEYDOWN:
+            #print("key down")
             if event.key == pygame.K_LEFT:
                 player.go_Left()
-            if event.type == pygame.K_RIGHT:
+                #print("key left")
+            if event.key == pygame.K_RIGHT:
+                #print("key right")
                 player.go_Right()
-            if event.type == pygame.K_UP:
+
+            if event.key == pygame.K_SPACE:
                 player.jump()
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT and player.movex < 0:
@@ -170,8 +187,13 @@ while 1:
     active_sprites.update()
     current_level.update()
 
-    active_sprites.draw()
-    current_level.draw()
+    screen.blit(Bg.image, Bg.rect)
+
+    active_sprites.draw(screen)
+    current_level.draw(screen)
+
+
+
+
 
     pygame.display.flip()
-"""commit"""
