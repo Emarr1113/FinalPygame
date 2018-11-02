@@ -35,7 +35,13 @@ class Player(pygame.sprite.Sprite):
         self.movex = 0  # move along X
         self.movey = 0  # move along Y
         self.level = None
+        self.direction = 1
 
+    def getPosition(self):
+        return (self.rect.left + 80 , self.rect.top)
+
+    def updateDirection(self, direction):
+        self.direction = direction
 
     def update(self):
         # Gravity
@@ -70,8 +76,10 @@ class Player(pygame.sprite.Sprite):
     #         # player_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
         self.movey= -10
     def go_Left(self):
+        self.direction = -1
         self.movex = -6
     def go_Right(self):
+        self.direction = 1
         self.movex = 6
     def go_Up(self):
         self.movey = -6
@@ -80,21 +88,6 @@ class Player(pygame.sprite.Sprite):
     def stop(self):
         self.movex = 0
 
-
-class Bullet(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-
-        self.image = pygame.Surface([4, 10])
-        self.image.fill(black)
-
-        self.rect = self.image.get_rect()
-
-    def update(self):
-
-        """ Move the bullet. """
-        self.rect.y -= 3
-        self.rect.y = 3
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -142,9 +135,31 @@ class LevelOne(Level):
             self.platform_list.add(block)
 
 class Bullets(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, pos, direction):
         pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load("filler.png")
+        self.rect = self.image.get_rect()
+        self.pos = pos
+        self.rect.center = pos
+        self.direction = direction
+        #self.vel = dir * self.bullet_speed()
+        #self.spawn_time = pygame.time.get_ticks()
 
+    # def bullet_speed(self):
+    #     self.speed = 500
+    # def bullet_lifetime(self):
+    #     self.bulletsLife = 1000
+    # def bullet_rate(self):
+    #     self.last_shot > self.bullet_rate
+    #     self.bullet_rate = 150
+    #
+    def update(self):
+        self.rect.x += (10 * self.direction)
+        # if pygame.time.get_ticks() - self.spawn_time > self.bullet_lifetime():
+        #     self.kill()
+
+    def delete_bullet(self):
+        if Bullets <= HEIGHT
 
 
 Bg = Background("gameBackground.png", [0,0])
@@ -168,17 +183,17 @@ while 1:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
+
         if event.type == pygame.KEYDOWN:
-            #print("key down")
             if event.key == pygame.K_LEFT:
                 player.go_Left()
-                #print("key left")
             if event.key == pygame.K_RIGHT:
-                #print("key right")
                 player.go_Right()
-
             if event.key == pygame.K_SPACE:
                 player.jump()
+            if event.key == pygame.K_s:
+                bullet = Bullets(player.getPosition(), player.direction)
+                active_sprites.add(bullet)
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT and player.movex < 0:
                 player.stop()
