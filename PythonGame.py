@@ -1,4 +1,4 @@
-import sys, pygame, random
+import sys, pygame, random, math
 
 WIDTH = 1014
 HEIGHT = 502
@@ -74,7 +74,7 @@ class Player(pygame.sprite.Sprite):
         # self.rect.y += 2
     #         # self.rect.y -=2
     #         # player_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
-        self.movey= -10
+        self.movey= -8
     def go_Left(self):
         self.direction = -1
         self.movex = -6
@@ -88,32 +88,31 @@ class Player(pygame.sprite.Sprite):
     def stop(self):
         self.movex = 0
 
-
-
-class Enemy(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+class Mob(pygame.sprite.Sprite):
+    def __init__(self):
         pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((30,40))
         self.image = pygame.image.load('enemy.png')
-        self.image = pygame.transform.scale(self.image,(100,100))
         self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-        # self.rect.move_ip(random.randint(0, screen.get_width()),
-        #                   random.randint(0, screen.get_height()))
-        self.rect.x = random.randrange(WIDTH - self.rect.width)
+        self.rect.x = random.randrange(WIDTH-self.rect.width)
         self.rect.y = random.randrange(-100, -40)
         self.speedy = random.randrange(1,8)
-        self.speedx = random.randrange(-3,3)
-        self.movex = 0
-        self.movey = 0
+        self.speed = 0
 
     def update(self):
         self.rect.y += self.speedy
-        self.rect.x += self.speedx
-        if self.rect.top > HEIGHT + 10:
+        if self.rect.top >HEIGHT + 10:
             self.rect.x = random.randrange(WIDTH - self.rect.width)
             self.rect.y = random.randrange(-100, -40)
-            self.speed = random.randrange(1, 8)
+            self.speedy = random.randrange(1, 8)
+
+    def move_towards_player(self, Player):
+        dx, dy = self.rect.x - Player.rect.x, self.rect.y - Player.rect.y
+        dist = math.hypot(dx, dy)
+        dx, dy = dx / dist, dy / dist
+        self.rect.x += dx * self.speed
+        self.rect.y += dy * self.speed
+
 
 class Level(object):
     def __init__(self,player):
@@ -161,10 +160,9 @@ class Bullets(pygame.sprite.Sprite):
     # def bullet_rate(self):
     #     self.last_shot > self.bullet_rate
     #     self.bullet_rate = 150
-    #
     def update(self):
         self.rect.x += (10 * self.direction)
-        # if pygame.time.get_ticks() - self.spawn_time > self.bullet_lifetime():
+        # if self.rect.bottom > 30:
         #     self.kill()
 
     # def delete_bullet(self):
@@ -176,22 +174,25 @@ Bg = Background("map.png", [0,0])
 pygame.init()
 
 player = Player()
+m = Mob()
+bullet = Bullets()
 
 levels = []
 levels.append(LevelOne(player))
 current_level = 0
 current_level = levels[current_level]
 active_sprites = pygame.sprite.Group()
+bullet_list = pygame.sprite.Group()
+bullet_list.add(bullet)
 player.level = current_level
 player.rect.x = 360
 player.rect.y = HEIGHT - player.rect.height
 active_sprites.add(player)
-Enemy.level = current_level
-Enemy.rect.x = 360
-Enemy.rect.y = HEIGHT - Enemy.rect.height
-
-active_sprites.add(Enemy)
-
+mobs = pygame.sprite.Group()
+for i in range(8):
+    m = Mob()
+    active_sprites.add(m)
+    mobs.add(m)
 
 while 1:
     for event in pygame.event.get():
@@ -213,11 +214,25 @@ while 1:
                 player.stop()
             if event.key == pygame.K_RIGHT and player.movex > 0:
                 player.stop()
+
     active_sprites.update()
+
+    #check if bullet hits mob
+    hits = pygame.sprite.groupcollide(mobs, bullet_list, True, True)
+    for hit in hits:
+        m = Mob()
+        active_sprites.add(m)
+        mobs.add(m)
+
+    # checks mob player collision
+    hits = pygame.sprite.spritecollide(player, mobs, False)
+    if hits:
+         event.type = sys.exit()
     current_level.update()
 
-    screen.blit(Bg.image, Bg.rect)
 
+    screen.blit(Bg.image, Bg.rect)
+    m.move_towards_player(player)
     active_sprites.draw(screen)
     current_level.draw(screen)
 
