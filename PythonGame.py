@@ -7,24 +7,24 @@ speed = (0, 0)
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
-
 vec = pygame.math.Vector2
-black = (0,0,0)
-yellow = (255,255,0)
+black = (0, 0, 0)
+yellow = (255, 255, 0)
 
 
 class Background(pygame.sprite.Sprite):
-    def __init__(self,image,location):
+    def __init__(self, image, location):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load("map.png")
         self.rect = self.image.get_rect()
         self.rect.left, self.rect.top = location
 
+
 class Platform(pygame.sprite.Sprite):
     def __init__(self, width, height):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load("platform.png")
-        self.image = pygame.transform.scale(self.image,(width,height))
+        self.image = pygame.transform.scale(self.image, (width, height))
         self.rect = self.image.get_rect()
 
 
@@ -38,8 +38,8 @@ class Player(pygame.sprite.Sprite):
         self.level = None
         self.direction = 1
         self.radius = 25
-        #check player circle
-        # pygame.draw.circle(self.image, yellow, self.rect.center , self.radius)
+        # self.health = 30
+        # check player circle
 
     def getPosition(self):
         return (self.rect.left + 76, self.rect.top + 35)
@@ -52,11 +52,13 @@ class Player(pygame.sprite.Sprite):
         self.calcGravity()
         self.rect.x += self.movex
         self.rect.y += self.movey
-        platform_hit_list = pygame.sprite.spritecollide(self,self.level.platform_list, False)
+        platform_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
         for platform in platform_hit_list:
             if self.movey > 0:
                 self.rect.bottom = platform.rect.top
                 self.movey = 0
+        # if self.health <= 0:
+        #     self.kill()
 
     def shoot(self):
         bullet = Bullets(player.getPosition(), self.direction)
@@ -71,71 +73,73 @@ class Player(pygame.sprite.Sprite):
         if self.rect.y >= HEIGHT - self.rect.height and self.movey >= 0:
             self.movey = 0
             self.rect.y = HEIGHT - self.rect.height
+
     def jump(self):
-        self.movey= -8
+        self.movey = -8
+
     def go_Left(self):
         self.direction = -1
         self.movex = -6
+
     def go_Right(self):
         self.direction = 1
         self.movex = 6
+
     def go_Up(self):
         self.movey = -6
+
     def go_Down(self):
         self.movey = 6
+
     def stop(self):
         self.movex = 0
+
 
 class Mob(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((30,40))
+        self.image = pygame.Surface((30, 40))
         self.image = pygame.image.load('enemy.png')
         self.rect = self.image.get_rect()
         self.radius = 35
-        #check enemy circle
-        # pygame.draw.circle(self.image, yellow, self.rect.center, self.radius)
-        self.rect.x = random.randrange(WIDTH-self.rect.width)
+        self.rect.x = random.randrange(WIDTH - self.rect.width)
         self.rect.y = random.randrange(-100, -40)
-        self.speedy = random.randrange(1,8)
-        self.speed = 0
+        self.speedy = random.randrange(1, 8)
+        # check enemy circle
+        # pygame.draw.circle(self.image, yellow, self.rect.center, self.radius)
+        self.speed = -15
+        # self.damage = 10
 
+    def move_towards_player(self, player):
+        # find normalized direction vector (dx, dy) between enemy and player
 
-    def update(self):
-        self.rect.y += self.speedy
-        if self.rect.top >HEIGHT + 10:
-            self.rect.x = random.randrange(WIDTH - self.rect.width)
-            self.rect.y = random.randrange(-100, -40)
-            self.speedy = random.randrange(1, 8)
-
-    def move_towards_player(self, Player):
-        dx, dy = self.rect.x - Player.rect.x, self.rect.y - Player.rect.y
+        dx, dy = self.rect.x - player.rect.x, self.rect.y - player.rect.y
         dist = math.hypot(dx, dy)
         dx, dy = dx / dist, dy / dist
+        # move along this normalized vector towards the player at current speeds
         self.rect.x += dx * self.speed
         self.rect.y += dy * self.speed
 
-
 class Level(object):
-    def __init__(self,player):
+    def __init__(self, player):
         self.platform_list = pygame.sprite.Group()
         self.enemy_list = pygame.sprite.Group()
         self.player = player
-
         self.background = None
 
     def update(self):
         self.platform_list.update()
         self.enemy_list.update()
-    def draw(self,screen):
 
+    def draw(self, screen):
         self.platform_list.draw(screen)
         self.enemy_list.draw(screen)
 
+
 class LevelOne(Level):
     def __init__(self, player):
-        Level.__init__(self,player)
-        level = [[195,36,422,171], [195,36,72,358], [195,36,752,358],]
+        Level.__init__(self, player)
+        level = [[195, 36, 422, 171], [195, 36, 72, 358], [195, 36, 752, 358], ]
 
         for platform in level:
             block = Platform(platform[0], platform[1])
@@ -143,6 +147,7 @@ class LevelOne(Level):
             block.rect.y = platform[3]
             block.player = self.player
             self.platform_list.add(block)
+
 
 class Bullets(pygame.sprite.Sprite):
     def __init__(self, pos, direction):
@@ -160,8 +165,7 @@ class Bullets(pygame.sprite.Sprite):
             self.kill()
 
 
-
-Bg = Background("map.png", [0,0])
+Bg = Background("map.png", [0, 0])
 
 pygame.init()
 
@@ -196,7 +200,7 @@ while 1:
             if event.key == pygame.K_LEFT:
                 player.go_Left()
             if event.key == pygame.K_RIGHT:
-               player.go_Right()
+                player.go_Right()
             if event.key == pygame.K_SPACE:
                 player.jump()
             if event.key == pygame.K_s:
@@ -219,17 +223,15 @@ while 1:
     # checks mob player collision
     hits = pygame.sprite.spritecollide(player, mobs, False, pygame.sprite.collide_circle)
     if hits:
-         event.type = sys.exit()
-    current_level.update()
+        # hit.health -= self.damage
+        # hit.vel= vec(0,0)
+        event.type = sys.exit()
 
+    current_level.update()
 
     screen.blit(Bg.image, Bg.rect)
     m.move_towards_player(player)
     active_sprites.draw(screen)
     current_level.draw(screen)
-
-
-
-
 
     pygame.display.flip()
