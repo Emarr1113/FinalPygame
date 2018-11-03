@@ -10,6 +10,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 vec = pygame.math.Vector2
 black = (0,0,0)
+yellow = (255,255,0)
 
 
 class Background(pygame.sprite.Sprite):
@@ -36,6 +37,9 @@ class Player(pygame.sprite.Sprite):
         self.movey = 0  # move along Y
         self.level = None
         self.direction = 1
+        self.radius = 25
+        #check player circle
+        # pygame.draw.circle(self.image, yellow, self.rect.center , self.radius)
 
     def getPosition(self):
         return (self.rect.left + 76, self.rect.top + 35)
@@ -47,20 +51,17 @@ class Player(pygame.sprite.Sprite):
         # Gravity
         self.calcGravity()
         self.rect.x += self.movex
-        # print("rect.x = %d " % self.rect.x)
-        # print("move x = %d " % self.movex)
-        # player_hit_list = pygame.sprite.spritecollide(self,self.level.platform_list, False)
-        # for player in player_hit_list:
-        #     if self.movey > 0:
-        #         self.rect.right = player.rect.left
-        #     elif self.movey < 0:
-        #         self.rect.left = player.rect.left
         self.rect.y += self.movey
         platform_hit_list = pygame.sprite.spritecollide(self,self.level.platform_list, False)
         for platform in platform_hit_list:
             if self.movey > 0:
                 self.rect.bottom = platform.rect.top
                 self.movey = 0
+
+    def shoot(self):
+        bullet = Bullets(player.getPosition(), self.direction)
+        active_sprites.add(bullet)
+        bullets.add(bullet)
 
     def calcGravity(self):
         if self.movey == 0:
@@ -71,9 +72,6 @@ class Player(pygame.sprite.Sprite):
             self.movey = 0
             self.rect.y = HEIGHT - self.rect.height
     def jump(self):
-        # self.rect.y += 2
-    #         # self.rect.y -=2
-    #         # player_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
         self.movey= -8
     def go_Left(self):
         self.direction = -1
@@ -94,10 +92,14 @@ class Mob(pygame.sprite.Sprite):
         self.image = pygame.Surface((30,40))
         self.image = pygame.image.load('enemy.png')
         self.rect = self.image.get_rect()
+        self.radius = 35
+        #check enemy circle
+        # pygame.draw.circle(self.image, yellow, self.rect.center, self.radius)
         self.rect.x = random.randrange(WIDTH-self.rect.width)
         self.rect.y = random.randrange(-100, -40)
         self.speedy = random.randrange(1,8)
         self.speed = 0
+
 
     def update(self):
         self.rect.y += self.speedy
@@ -150,23 +152,13 @@ class Bullets(pygame.sprite.Sprite):
         self.pos = pos
         self.rect.center = pos
         self.direction = direction
-        #self.vel = dir * self.bullet_speed()
-        #self.spawn_time = pygame.time.get_ticks()
 
-    # def bullet_speed(self):
-    #     self.speed = 500
-    # def bullet_lifetime(self):
-    #     self.bulletsLife = 1000
-    # def bullet_rate(self):
-    #     self.last_shot > self.bullet_rate
-    #     self.bullet_rate = 150
     def update(self):
         self.rect.x += (10 * self.direction)
-        # if self.rect.bottom > 30:
-        #     self.kill()
+        # Bullet dies off screen
+        if self.rect.left < 0 or self.rect.right > 1014:
+            self.kill()
 
-    # def delete_bullet(self):
-    #     if Bullets() <= HEIGHT
 
 
 Bg = Background("map.png", [0,0])
@@ -175,21 +167,22 @@ pygame.init()
 
 player = Player()
 m = Mob()
-bullet = Bullets()
 
 levels = []
 levels.append(LevelOne(player))
 current_level = 0
 current_level = levels[current_level]
 active_sprites = pygame.sprite.Group()
-bullet_list = pygame.sprite.Group()
-bullet_list.add(bullet)
+
+bullets = pygame.sprite.Group()
+
 player.level = current_level
 player.rect.x = 360
 player.rect.y = HEIGHT - player.rect.height
 active_sprites.add(player)
+
 mobs = pygame.sprite.Group()
-for i in range(8):
+for i in range(10):
     m = Mob()
     active_sprites.add(m)
     mobs.add(m)
@@ -203,12 +196,11 @@ while 1:
             if event.key == pygame.K_LEFT:
                 player.go_Left()
             if event.key == pygame.K_RIGHT:
-                player.go_Right()
+               player.go_Right()
             if event.key == pygame.K_SPACE:
                 player.jump()
             if event.key == pygame.K_s:
-                bullet = Bullets(player.getPosition(), player.direction)
-                active_sprites.add(bullet)
+                bullet = player.shoot()
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT and player.movex < 0:
                 player.stop()
@@ -217,15 +209,15 @@ while 1:
 
     active_sprites.update()
 
-    #check if bullet hits mob
-    hits = pygame.sprite.groupcollide(mobs, bullet_list, True, True)
+    # check if bullet hits mob
+    hits = pygame.sprite.groupcollide(mobs, bullets, True, True)
     for hit in hits:
         m = Mob()
         active_sprites.add(m)
         mobs.add(m)
 
     # checks mob player collision
-    hits = pygame.sprite.spritecollide(player, mobs, False)
+    hits = pygame.sprite.spritecollide(player, mobs, False, pygame.sprite.collide_circle)
     if hits:
          event.type = sys.exit()
     current_level.update()
