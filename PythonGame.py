@@ -1,7 +1,9 @@
-import sys, pygame, random, math
+import sys, pygame, random, math, time
 
 WIDTH = 1014
 HEIGHT = 502
+
+pygame.init()
 
 speed = (0, 0)
 
@@ -11,6 +13,15 @@ vec = pygame.math.Vector2
 black = (0, 0, 0)
 yellow = (255, 255, 0)
 
+clock = pygame.time.Clock()
+
+font = pygame.font.Font(None, 25)
+
+frame_count = 0
+frame_rate = 60
+start_time = 90
+
+pygame.display.set_caption("Cosmic Defender")
 
 class Background(pygame.sprite.Sprite):
     def __init__(self, image, location):
@@ -31,7 +42,8 @@ class Platform(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load("player.png")
+        self.image = pygame.image.load("playerRight.png")
+        self.image = pygame.image.load("playerLeft.png")
         self.rect = self.image.get_rect()
         self.movex = 0  # move along X
         self.movey = 0  # move along Y
@@ -40,7 +52,7 @@ class Player(pygame.sprite.Sprite):
         self.radius = 25
         # self.health = 30
         # check player circle
-
+        # pygame.draw.circle(self.image, yellow, self.rect.center, self.radius)
     def getPosition(self):
         return (self.rect.left + 76, self.rect.top + 35)
 
@@ -57,8 +69,6 @@ class Player(pygame.sprite.Sprite):
             if self.movey > 0:
                 self.rect.bottom = platform.rect.top
                 self.movey = 0
-        # if self.health <= 0:
-        #     self.kill()
 
     def shoot(self):
         bullet = Bullets(player.getPosition(), self.direction)
@@ -79,17 +89,17 @@ class Player(pygame.sprite.Sprite):
 
     def go_Left(self):
         self.direction = -1
-        self.movex = -6
+        self.movex = -8
 
     def go_Right(self):
         self.direction = 1
-        self.movex = 6
+        self.movex = 8
 
     def go_Up(self):
-        self.movey = -6
+        self.movey = -8
 
     def go_Down(self):
-        self.movey = 6
+        self.movey = 8
 
     def stop(self):
         self.movex = 0
@@ -107,7 +117,7 @@ class Mob(pygame.sprite.Sprite):
         self.speedy = random.randrange(1, 8)
         # check enemy circle
         # pygame.draw.circle(self.image, yellow, self.rect.center, self.radius)
-        self.speed = -15
+        self.speed = -9
         # self.damage = 10
 
     def move_towards_player(self, player):
@@ -191,6 +201,13 @@ for i in range(10):
     active_sprites.add(m)
     mobs.add(m)
 
+clock = pygame.time.Clock()
+font = pygame.font.Font(None, 25)
+frame_count = 0
+frame_rate = 60
+start_time = 90
+
+
 while 1:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -211,8 +228,6 @@ while 1:
             if event.key == pygame.K_RIGHT and player.movex > 0:
                 player.stop()
 
-    active_sprites.update()
-
     # check if bullet hits mob
     hits = pygame.sprite.groupcollide(mobs, bullets, True, True)
     for hit in hits:
@@ -223,9 +238,28 @@ while 1:
     # checks mob player collision
     hits = pygame.sprite.spritecollide(player, mobs, False, pygame.sprite.collide_circle)
     if hits:
-        # hit.health -= self.damage
-        # hit.vel= vec(0,0)
         event.type = sys.exit()
+
+    total_seconds = frame_count // frame_rate
+
+    # Divide by 60 to get total minutes
+    minutes = total_seconds // 60
+
+    # Use modulus (remainder) to get seconds
+    seconds = total_seconds % 60
+
+    # Use python string formatting to format in leading zeros
+    output_string = "Time Survived {0:02}:{1:02}".format(minutes, seconds)
+
+    # Blit to the screen
+    text = font.render(output_string, True, yellow)
+    screen.blit(text, [250, 250])
+
+    frame_count += 1
+
+    clock.tick(frame_rate)
+
+    active_sprites.update()
 
     current_level.update()
 
