@@ -1,4 +1,4 @@
-import sys, pygame, random, math, time
+import sys, pygame, random, math
 
 WIDTH = 1014
 HEIGHT = 502
@@ -42,6 +42,7 @@ class Platform(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
+        self.images = []
         self.image = pygame.image.load("playerRight.png")
         self.image = pygame.image.load("playerLeft.png")
         self.rect = self.image.get_rect()
@@ -69,6 +70,10 @@ class Player(pygame.sprite.Sprite):
             if self.movey > 0:
                 self.rect.bottom = platform.rect.top
                 self.movey = 0
+        if self.rect.left <0:
+            self.rect.left = 0
+        if self.rect.right > WIDTH:
+            self.rect.right = WIDTH
 
     def shoot(self):
         bullet = Bullets(player.getPosition(), self.direction)
@@ -90,10 +95,12 @@ class Player(pygame.sprite.Sprite):
     def go_Left(self):
         self.direction = -1
         self.movex = -8
+        self.image = pygame.image.load("playerLeft.png")
 
     def go_Right(self):
         self.direction = 1
         self.movex = 8
+        self.image = pygame.image.load("playerRight.png")
 
     def go_Up(self):
         self.movey = -8
@@ -191,7 +198,7 @@ active_sprites = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
 
 player.level = current_level
-player.rect.x = 360
+player.rect.x = 450
 player.rect.y = HEIGHT - player.rect.height
 active_sprites.add(player)
 
@@ -222,38 +229,40 @@ while 1:
                 player.jump()
             if event.key == pygame.K_s:
                 bullet = player.shoot()
+
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT and player.movex < 0:
                 player.stop()
             if event.key == pygame.K_RIGHT and player.movex > 0:
                 player.stop()
 
-    # check if bullet hits mob
-    hits = pygame.sprite.groupcollide(mobs, bullets, True, True)
-    for hit in hits:
-        m = Mob()
-        active_sprites.add(m)
-        mobs.add(m)
-
-    # checks mob player collision
-    hits = pygame.sprite.spritecollide(player, mobs, False, pygame.sprite.collide_circle)
-    if hits:
-        event.type = sys.exit()
-
-    total_seconds = frame_count // frame_rate
-
-    # Divide by 60 to get total minutes
-    minutes = total_seconds // 60
-
-    # Use modulus (remainder) to get seconds
-    seconds = total_seconds % 60
-
-    # Use python string formatting to format in leading zeros
-    output_string = "Time Survived {0:02}:{1:02}".format(minutes, seconds)
-
-    # Blit to the screen
-    text = font.render(output_string, True, yellow)
-    screen.blit(text, [250, 250])
+    #For Stopwatch ----- NOT DONE
+    # # check if bullet hits mob
+    # hits = pygame.sprite.groupcollide(mobs, bullets, True, True)
+    # for hit in hits:
+    #     m = Mob()
+    #     active_sprites.add(m)
+    #     mobs.add(m)
+    #
+    # # checks mob player collision
+    # hits = pygame.sprite.spritecollide(player, mobs, False, pygame.sprite.collide_circle)
+    # if hits:
+    #     event.type = sys.exit()
+    #
+    # total_seconds = frame_count // frame_rate
+    #
+    # # Divide by 60 to get total minutes
+    # minutes = total_seconds // 60
+    #
+    # # Use modulus (remainder) to get seconds
+    # seconds = total_seconds % 60
+    #
+    # # Use python string formatting to format in leading zeros
+    # output_string = "Time Survived {0:02}:{1:02}".format(minutes, seconds)
+    #
+    # # Blit to the screen
+    # text = font.render(output_string, True, yellow)
+    # screen.blit(text, [250, 250])
 
     frame_count += 1
 
@@ -264,7 +273,7 @@ while 1:
     current_level.update()
 
     screen.blit(Bg.image, Bg.rect)
-    m.move_towards_player(player)
+
     active_sprites.draw(screen)
     current_level.draw(screen)
 
