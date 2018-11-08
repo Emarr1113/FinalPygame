@@ -17,10 +17,6 @@ clock = pygame.time.Clock()
 
 font = pygame.font.Font(None, 25)
 
-frame_count = 0
-frame_rate = 60
-start_time = 90
-
 pygame.display.set_caption("Cosmic Defender")
 
 class Background(pygame.sprite.Sprite):
@@ -248,25 +244,8 @@ while 1:
     if hits:
         event.type = sys.exit()
 
-    #Stopwatch -----NOT DONE
-    # total_seconds = frame_count // frame_rate
-    #
-    # # Divide by 60 to get total minutes
-    # minutes = total_seconds // 60
-    #
-    # # Use modulus (remainder) to get seconds
-    # seconds = total_seconds % 60
-    #
-    # # Use python string formatting to format in leading zeros
-    # output_string = "Time Survived {0:02}:{1:02}".format(minutes, seconds)
-    #
-    # # Blit to the screen
-    # text = font.render(output_string, True, yellow)
-    # screen.blit(text, [250, 250])
-    #
-    # frame_count += 1
-    #
-    # clock.tick(frame_rate)
+    clock.tick(30)
+
 
     active_sprites.update()
 
