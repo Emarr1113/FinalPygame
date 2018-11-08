@@ -236,19 +236,19 @@ while 1:
             if event.key == pygame.K_RIGHT and player.movex > 0:
                 player.stop()
 
-    #For Stopwatch ----- NOT DONE
-    # # check if bullet hits mob
-    # hits = pygame.sprite.groupcollide(mobs, bullets, True, True)
-    # for hit in hits:
-    #     m = Mob()
-    #     active_sprites.add(m)
-    #     mobs.add(m)
-    #
-    # # checks mob player collision
-    # hits = pygame.sprite.spritecollide(player, mobs, False, pygame.sprite.collide_circle)
-    # if hits:
-    #     event.type = sys.exit()
-    #
+    # check if bullet hits mob
+    hits = pygame.sprite.groupcollide(mobs, bullets, True, True)
+    for hit in hits:
+        m = Mob()
+        active_sprites.add(m)
+        mobs.add(m)
+
+    # checks mob player collision
+    hits = pygame.sprite.spritecollide(player, mobs, False, pygame.sprite.collide_circle)
+    if hits:
+        event.type = sys.exit()
+
+    #Stopwatch -----NOT DONE
     # total_seconds = frame_count // frame_rate
     #
     # # Divide by 60 to get total minutes
@@ -263,17 +263,17 @@ while 1:
     # # Blit to the screen
     # text = font.render(output_string, True, yellow)
     # screen.blit(text, [250, 250])
-
-    frame_count += 1
-
-    clock.tick(frame_rate)
+    #
+    # frame_count += 1
+    #
+    # clock.tick(frame_rate)
 
     active_sprites.update()
 
     current_level.update()
 
     screen.blit(Bg.image, Bg.rect)
-
+    m.move_towards_player(player)
     active_sprites.draw(screen)
     current_level.draw(screen)
 
